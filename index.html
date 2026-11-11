@@ -231,7 +231,6 @@
       showThanks(record.name,'Đang gửi đăng ký...','Thông tin của bạn đang được gửi đến ban tổ chức. Vui lòng chờ trong giây lát.');
 
       let finished=false;
-      let submitted=false;
       const frame=document.createElement('iframe');
       frame.name='gia-lai-registration-response-'+makeSubmissionId();
       frame.title='Phản hồi đăng ký';
@@ -269,12 +268,10 @@
         if(!trustedOrigin||messageEvent.data?.type!=='gia-lai-registration')return;
         finish(Boolean(messageEvent.data.ok),messageEvent.data.message);
       };
-      frame.addEventListener('load',()=>{
-        if(!submitted){submitted=true;transport.submit();return}
-      });
       window.addEventListener('message',onMessage);
       const timeout=setTimeout(()=>finish(false,'Chưa nhận được phản hồi từ danh sách. Vui lòng kiểm tra với ban tổ chức trước khi gửi lại.'),25000);
       document.body.append(frame,transport);
+      try{transport.submit()}catch{finish(false,'Không gửi được đăng ký. Vui lòng kiểm tra kết nối mạng rồi thử lại.')}
     });
   </script>
 </body>
