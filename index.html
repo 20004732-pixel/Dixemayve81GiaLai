@@ -85,6 +85,8 @@
     const DEVICE_BLOCK_ENABLED=true;
     const DEVICE_KEY='gia-lai-device-registered-v1';
     const DEVICE_NAME_KEY='gia-lai-device-registered-name-v1';
+    const readDeviceState=key=>{try{return window.localStorage.getItem(key)}catch{return null}};
+    const saveDeviceState=(key,value)=>{try{window.localStorage.setItem(key,value)}catch{}};
     let departureDay='26';
     const welcome=document.getElementById('welcome');
     const registration=document.getElementById('registration');
@@ -164,7 +166,7 @@
     if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches)showScene(0);
 
     function openForm(day){
-      if(DEVICE_BLOCK_ENABLED&&localStorage.getItem(DEVICE_KEY)==='1'){showSavedRegistration();return}
+      if(DEVICE_BLOCK_ENABLED&&readDeviceState(DEVICE_KEY)==='1'){showSavedRegistration();return}
       departureDay=day;
       document.getElementById('chosen-day').textContent='Ngày '+day;
       welcome.hidden=true;
@@ -185,7 +187,7 @@
     }
     function hideThanks(){thanks.classList.remove('visible');thanks.hidden=true}
     function showSavedRegistration(){
-      const savedName=localStorage.getItem(DEVICE_NAME_KEY)||'bạn';
+      const savedName=readDeviceState(DEVICE_NAME_KEY)||'bạn';
       welcome.hidden=true;
       registration.classList.remove('visible');
       showThanks(savedName,'Đăng ký thành công','Thiết bị này đã ghi nhận đăng ký. Nếu bạn cần chỉnh sửa thông tin, vui lòng liên hệ ban tổ chức.');
@@ -252,7 +254,7 @@
         if(ok){
           registration.classList.remove('visible');
           welcome.hidden=true;
-          if(DEVICE_BLOCK_ENABLED){localStorage.setItem('gia-lai-device-registered-v1','1');localStorage.setItem('gia-lai-device-registered-name-v1',record.name)}
+          if(DEVICE_BLOCK_ENABLED){saveDeviceState(DEVICE_KEY,'1');saveDeviceState(DEVICE_NAME_KEY,record.name)}
           document.getElementById('live-status').textContent='Đăng ký thành công';
           showThanks(record.name,'Đăng ký thành công','Thông tin của bạn đã được ghi nhận. Hẹn gặp bạn vào ngày đoàn khởi hành nhé!');
         }else{
@@ -269,7 +271,6 @@
       };
       frame.addEventListener('load',()=>{
         if(!submitted){submitted=true;transport.submit();return}
-        finish(true,'');
       });
       window.addEventListener('message',onMessage);
       const timeout=setTimeout(()=>finish(false,'Chưa nhận được phản hồi từ danh sách. Vui lòng kiểm tra với ban tổ chức trước khi gửi lại.'),25000);
