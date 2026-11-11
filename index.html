@@ -85,6 +85,7 @@
     const DEVICE_BLOCK_ENABLED=true;
     const DEVICE_KEY='gia-lai-device-registered-v1';
     const DEVICE_NAME_KEY='gia-lai-device-registered-name-v1';
+    const DEVICE_ID_KEY='gia-lai-registration-device-id-v1';
     const readDeviceState=key=>{try{return window.localStorage.getItem(key)}catch{return null}};
     const saveDeviceState=(key,value)=>{try{window.localStorage.setItem(key,value)}catch{}};
     let departureDay='26';
@@ -110,6 +111,14 @@
     const backgroundVideo=document.getElementById('background-video');
     const getValue=(data,key)=>String(data.get(key)||'').trim();
     const makeSubmissionId=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
+    const getOrCreateDeviceId=()=>{
+      let deviceId=readDeviceState(DEVICE_ID_KEY);
+      if(!deviceId){
+        deviceId=makeSubmissionId();
+        saveDeviceState(DEVICE_ID_KEY,deviceId);
+      }
+      return deviceId;
+    };
 
     const backgroundScenes=[
       {type:'video',src:'https://cdn.pixabay.com/video/2024/09/16/231651_large.mp4'},
@@ -210,7 +219,7 @@
         companion:getValue(data,'companion'),
         flag:data.get('flag')||'',
         notes:getValue(data,'notes'),
-        deviceId:makeSubmissionId()
+        deviceId:getOrCreateDeviceId()
       };
     }
     document.getElementById('thanks-close').addEventListener('click',hideThanks);
