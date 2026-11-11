@@ -166,7 +166,8 @@
     if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches)showScene(0);
 
     function openForm(day){
-      if(DEVICE_BLOCK_ENABLED&&readDeviceState(DEVICE_KEY)==='1'){showSavedRegistration();return}
+      const deviceState=readDeviceState(DEVICE_KEY);
+      if(DEVICE_BLOCK_ENABLED&&(deviceState==='1'||deviceState==='pending')){showSavedRegistration();return}
       departureDay=day;
       document.getElementById('chosen-day').textContent='Ngày '+day;
       welcome.hidden=true;
@@ -177,7 +178,7 @@
     function showThanks(name,status='Đang gửi đăng ký...',message='Cảm ơn bạn đã đăng ký. Hẹn gặp bạn vào ngày đoàn khởi hành nhé!'){
       const success=status==='Đăng ký thành công';
       thanks.classList.toggle('success-visible',success);
-      document.getElementById('thanks-title').textContent=success?'Chúc mừng '+(name||'bạn')+' đã đăng ký thành công!':status==='Đang xác nhận đăng ký'?'Chưa xác nhận được đăng ký':'Đang gửi đăng ký...';
+      document.getElementById('thanks-title').textContent=success?'Chúc mừng '+(name||'bạn')+' đã đăng ký thành công!':status==='Đang xác nhận đăng ký'?'Đã nhận yêu cầu đăng ký':'Đang gửi đăng ký...';
       document.getElementById('thanks-label').textContent=success?'Đăng ký thành công':status;
       document.getElementById('thanks-text').textContent=message;
       document.getElementById('thanks-greeting').hidden=!success;
@@ -188,11 +189,13 @@
     function hideThanks(){thanks.classList.remove('visible');thanks.hidden=true}
     function showSavedRegistration(){
       const savedName=readDeviceState(DEVICE_NAME_KEY)||'bạn';
+      const pending=readDeviceState(DEVICE_KEY)==='pending';
       welcome.hidden=true;
       registration.classList.remove('visible');
-      showThanks(savedName,'Đăng ký thành công','Thiết bị này đã ghi nhận đăng ký. Nếu bạn cần chỉnh sửa thông tin, vui lòng liên hệ ban tổ chức.');
+      showThanks(savedName,pending?'Đang xác nhận đăng ký':'Đăng ký thành công',pending?'Yêu cầu của bạn đang được hệ thống xác nhận. Để tránh trùng thông tin, bạn không cần gửi lại. Nếu cần chỉnh sửa, vui lòng liên hệ ban tổ chức.':'Thiết bị này đã ghi nhận đăng ký. Nếu bạn cần chỉnh sửa thông tin, vui lòng liên hệ ban tổ chức.');
     }
-    if(DEVICE_BLOCK_ENABLED&&readDeviceState(DEVICE_KEY)==='1')showSavedRegistration();
+    const initialDeviceState=readDeviceState(DEVICE_KEY);
+    if(DEVICE_BLOCK_ENABLED&&(initialDeviceState==='1'||initialDeviceState==='pending'))showSavedRegistration();
     function validateAndRead(){
       const data=new FormData(form);
       return {
@@ -244,7 +247,7 @@
         input.type='hidden';input.name=key;input.value=value;
         transport.appendChild(input);
       });
-      const finish=(ok,message)=>{
+      const finish=(ok,message,uncertain=false)=>{
         if(finished)return;
         finished=true;
         window.removeEventListener('message',onMessage);
@@ -256,6 +259,12 @@
           if(DEVICE_BLOCK_ENABLED){saveDeviceState(DEVICE_KEY,'1');saveDeviceState(DEVICE_NAME_KEY,record.name)}
           document.getElementById('live-status').textContent='Đăng ký thành công';
           showThanks(record.name,'Đăng ký thành công','Thông tin của bạn đã được ghi nhận. Hẹn gặp bạn vào ngày đoàn khởi hành nhé!');
+        }else if(uncertain){
+          registration.classList.remove('visible');
+          welcome.hidden=true;
+          if(DEVICE_BLOCK_ENABLED){saveDeviceState(DEVICE_KEY,'pending');saveDeviceState(DEVICE_NAME_KEY,record.name)}
+          document.getElementById('live-status').textContent='Đang xác nhận đăng ký';
+          showThanks(record.name,'Đang xác nhận đăng ký',message||'Yêu cầu đã được gửi nhưng hệ thống chưa kịp trả kết quả. Để tránh trùng thông tin, bạn không cần gửi lại.');
         }else{
           registration.classList.add('visible');
           document.getElementById('live-status').textContent='Chưa xác nhận được đăng ký';
@@ -269,7 +278,7 @@
         finish(Boolean(messageEvent.data.ok),messageEvent.data.message);
       };
       window.addEventListener('message',onMessage);
-      const timeout=setTimeout(()=>finish(false,'Chưa nhận được phản hồi từ danh sách. Vui lòng kiểm tra với ban tổ chức trước khi gửi lại.'),25000);
+      const timeout=setTimeout(()=>finish(false,'Yêu cầu đã được gửi nhưng chưa nhận được phản hồi xác nhận kịp thời. Để tránh trùng thông tin, bạn không cần gửi lại.',true),25000);
       document.body.append(frame,transport);
       try{transport.submit()}catch{finish(false,'Không gửi được đăng ký. Vui lòng kiểm tra kết nối mạng rồi thử lại.')}
     });
