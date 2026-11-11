@@ -192,7 +192,7 @@
       registration.classList.remove('visible');
       showThanks(savedName,'Đăng ký thành công','Thiết bị này đã ghi nhận đăng ký. Nếu bạn cần chỉnh sửa thông tin, vui lòng liên hệ ban tổ chức.');
     }
-    if(DEVICE_BLOCK_ENABLED&&localStorage.getItem(DEVICE_KEY)==='1')showSavedRegistration();
+    if(DEVICE_BLOCK_ENABLED&&readDeviceState(DEVICE_KEY)==='1')showSavedRegistration();
     function validateAndRead(){
       const data=new FormData(form);
       return {
