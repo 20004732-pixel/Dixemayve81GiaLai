@@ -287,7 +287,7 @@
         finish(Boolean(messageEvent.data.ok),messageEvent.data.message);
       };
       window.addEventListener('message',onMessage);
-      const timeout=setTimeout(()=>finish(false,'Yêu cầu đã được gửi nhưng chưa nhận được phản hồi xác nhận kịp thời. Để tránh trùng thông tin, bạn không cần gửi lại.',true),25000);
+      const timeout=setTimeout(()=>finish(false,'Yêu cầu đã được gửi nhưng chưa nhận được phản hồi xác nhận trong 5 giây. Để tránh trùng thông tin, bạn không cần gửi lại.',true),5000);
       document.body.append(frame,transport);
       try{transport.submit()}catch{finish(false,'Không gửi được đăng ký. Vui lòng kiểm tra kết nối mạng rồi thử lại.')}
     });
